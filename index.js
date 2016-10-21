@@ -6,8 +6,7 @@ if( process.argv.length < 3 ){
 }
 
 var webpageUrl = process.argv[2];
-//var pattern = process.argv.length > 3 ? process.argv[3] : '/href=\\\"[^"]+.jpg\\\"/g';
-var pattern = process.argv.length > 3 ? process.argv[3] : 'href=\\\"[^"]+.jpg\\\"';
+var pattern = process.argv.length > 3 ? process.argv[3] : 'href=\\\"([^"]+.jpg)\\\"';
 
 var Rx = require("rx");
 var http = require('http');
