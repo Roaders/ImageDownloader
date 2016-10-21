@@ -1,0 +1,23 @@
+{
+  "name": "ImageDownloader",
+  "version": "1.0.0",
+  "description": "An npm app to scrape a webpage and download images",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Roaders/ImageDownloader.git"
+  },
+  "author": "Giles Roadnight",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Roaders/ImageDownloader/issues"
+  },
+  "homepage": "https://github.com/Roaders/ImageDownloader",
+  "dependencies": {
+    "rx-node": "^1.0.2",
+    "rx": "*"
+  }
+}
