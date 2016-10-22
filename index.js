@@ -18,27 +18,30 @@ var regExp = new RegExp(pattern,"g");
 
 var cookie = fs.readFileSync( "cookie.txt" );
 
+console.log("Creating output folder");
+
+fs.mkdirSync("output");
+
 console.log("Loading Webpage: " + webpageUrl);
 
 console.log("Cookie content: " + cookie);
 
-var url = url.parse(webpageUrl);
+function getUrl(targetUrl){
+	var urlObject = url.parse(targetUrl);
 
-var options = {
-	hostname: url.hostname,
-	localAddress: url.localAddress,
-	port: url.port,
-	path: url.path,
-	headers: {
-		"Cookie": cookie
-	}
-};
+	var options = {
+		hostname: urlObject.hostname,
+		localAddress: urlObject.localAddress,
+		port: urlObject.port,
+		path: urlObject.path,
+		headers: {
+			"Cookie": cookie
+		}
+	};
 
-console.log("hostname: " + url.hostname + " localAddress: " + url.localAddress + " path: " + url.path);
-
-var clientRequest = http.get(options);
-
-Rx.Observable.fromEvent( clientRequest, "response" )
+	return http.get(options);
+}
+Rx.Observable.fromEvent( getUrl(webpageUrl), "response" )
 	.take(1)
 	.flatMap(function(response){
 		console.log("handling response code: " + response.statusCode);
@@ -62,15 +65,21 @@ Rx.Observable.fromEvent( clientRequest, "response" )
 		
 		return imageUrl = regExResults[regExResults.length-1];
 	})
+	.take(1)
 	.do( function(imageUrl){
 		
 		var imagePath = path.parse(imageUrl);
 		
 		console.log( "saving image " + imageUrl + " (" + imagePath.name + imagePath.ext + ")" );
 		
+		var file = fs.createWriteStream("output/" + imagePath.name + imagePath.ext );
+		var request = http.get(imageUrl, function(response) {
+			response.pipe(file);
+		});
+
 	} )
 	.subscribe( function(item){
-		console.log("item: " + item );
+		//console.log("item: " + item );
 	},null,function(){
 		console.log("complete");
 	});
