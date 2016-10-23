@@ -12,13 +12,13 @@ A simple node script to scrape a webpage for matching urls and download them all
 
 ## Usage
 
-`node index.js http://google.co.uk`
+`node index.js http://mydomain.com`
 
-This will download all the `.jpg` images on the google homepage
+This will download all the `.jpg` images on your homepage
 
-`node index.js http://github.com href=\"([^\"]*.png)\"`
+`node index.js http://mydomain.com href=\"([^\"]*.png)\"`
 
-This will download all of the png files on the github home page
+This will download all of the png files on your homepage
 
 ## Cookies
 
