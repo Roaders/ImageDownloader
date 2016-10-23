@@ -15,8 +15,15 @@ var url = require('url');
 var path = require('path');
 		
 var regExp = new RegExp(pattern,"g");
+try{
+	var cookie = fs.readFileSync( "cookie.txt" );
+}
+catch(e){}
 
-var cookie = fs.readFileSync( "cookie.txt" );
+var concurrentDownloads = 4;
+
+var totalDownloads = 0;
+var completedDownloads = 0;
 
 function getUrl(targetUrl){
 	var urlObject = url.parse(targetUrl);
@@ -25,11 +32,13 @@ function getUrl(targetUrl){
 		hostname: urlObject.hostname,
 		localAddress: urlObject.localAddress,
 		port: urlObject.port,
-		path: urlObject.path,
-		headers: {
-			"Cookie": cookie
-		}
+		path: urlObject.path
 	};
+
+	if(cookie){
+		console.log("Cookie content being added");
+		options.headers = {"Cookie": cookie}
+	}
 
 	return Rx.Observable.fromEvent( http.get(options), "response" )
 		.take(1);
@@ -39,11 +48,8 @@ function loadImages(){
 
 	console.log("Loading Webpage: " + webpageUrl);
 
-	console.log("Cookie content being added");
-
 	getUrl(webpageUrl)
 		.flatMap(function(response){
-			console.log("handling response code: " + response.statusCode);
 			
 			return Rx.Observable.fromEvent(response, "data")
 				.takeUntil( Rx.Observable.fromEvent(response, "end") );
@@ -58,7 +64,14 @@ function loadImages(){
 			
 			var matches = htmlContent.match(regExp);
 
-			console.log(matches.length + " matches found");
+			if(!matches){
+				console.log("no images found, exiting");
+				process.exit();
+			}
+
+			totalDownloads = matches.length;
+
+			console.log(totalDownloads + " matches found");
 
 			return Rx.Observable.from(matches);
 		})
@@ -68,26 +81,32 @@ function loadImages(){
 			
 			return imageUrl = regExResults[regExResults.length-1];
 		})
-		.take(1)
-		.flatMap( function(imageUrl){
+		.flatMapWithMaxConcurrent( concurrentDownloads, function(imageUrl){
 			
-			var imagePath = path.parse(imageUrl);
-			
-			console.log( "saving image " + imageUrl + " (" + imagePath.name + imagePath.ext + ")" );
-			
-			var fileStream = fs.createWriteStream("output/" + imagePath.name + imagePath.ext );
-			var request = http.get(imageUrl, function(response) {
-				response.pipe(fileStream);
-			});
+			return Rx.Observable.defer( function(){
 
-			return Rx.Observable.fromEvent(fileStream, "finish")
-				.take(1);
+				var imagePath = path.parse(imageUrl);
+				
+				console.log( "Saving image " + imageUrl + " (" + imagePath.name + imagePath.ext + ")" );
+				
+				var fileStream = fs.createWriteStream("output/" + imagePath.name + imagePath.ext );
+				var request = http.get(imageUrl, function(response) {
+					response.pipe(fileStream);
+				});
+
+				return Rx.Observable.fromEvent(fileStream, "finish")
+					.take(1)
+					.do(function(event){
+						completedDownloads++;
+						console.log( "Download finished for " + imagePath.name + imagePath.ext + " (" + completedDownloads + "/" + totalDownloads + ")" );
+					});
+			});
 
 		} )
 		.subscribe( function(item){
 			//console.log("item: " + item );
 		},null,function(){
-			console.log("complete");
+			console.log("All Downloads Finished");
 		});
 }
 
