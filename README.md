@@ -1,5 +1,7 @@
 # ImageDownloader
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/Roaders/ImageDownloader.svg)](https://greenkeeper.io/)
+
 A simple node script to scrape a webpage for matching urls and download them all to an output folder.
 
 ## Installation
